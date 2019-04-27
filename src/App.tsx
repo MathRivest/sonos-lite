@@ -1,15 +1,13 @@
 import React, { FC } from 'react';
-import logo from './logo.svg';
-import style from './App.module.css';
+import Styles from './App.module.css';
 import ElectronDragBar from './components/ElectronDragBar';
+import Player from './components/Player/Player';
 
 const App: FC = () => {
   return (
-    <div className={style.App}>
+    <div className={Styles.App}>
       <ElectronDragBar />
-      <header className={style.AppHeader}>
-        <img src={logo} className={style.AppLogo} alt="logo" />
-      </header>
+      <Player />
     </div>
   );
 };

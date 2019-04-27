@@ -11,6 +11,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.0",
+    "sonos": "^1.10.1",
     "typescript": "^3.4.5"
   },
   "scripts": {
@@ -18,7 +19,6 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-
     "build-electron": "tsc -p ./tsconfig-electron.json",
     "dev-electron": "tsc -w -p ./tsconfig-electron.json",
     "electron": "npm run build-electron && electron . "

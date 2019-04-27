@@ -2,8 +2,11 @@ import { app, BrowserWindow, Tray } from 'electron';
 import { initMainWindow } from './main';
 import { initTray } from './tray';
 
+import SonosNetwork from './sonos';
+
 let mainWindow: BrowserWindow;
 let tray: Tray;
+let sonosNetwork: SonosNetwork;
 
 function init() {
   mainWindow = initMainWindow();
@@ -18,10 +21,11 @@ function init() {
   });
 
   mainWindow.on('show', (): void => tray.setHighlightMode('always'));
-
   mainWindow.on('hide', (): void => tray.setHighlightMode('never'));
-
   mainWindow.on('closed', (): void => (mainWindow = null));
+
+  sonosNetwork = new SonosNetwork();
+  sonosNetwork.init();
 }
 
 app.on('ready', init);
