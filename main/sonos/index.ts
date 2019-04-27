@@ -1,46 +1,69 @@
-const { DeviceDiscovery } = require('sonos');
+const { DeviceDiscovery, Listener } = require('sonos');
 
-type SonosDevice = any & {
+type SonosDevice = {
   deviceDescription: () => any;
-  host: string;
-
-  //
+  host: unknown;
   name: string;
   displayName: string;
   id: string;
 };
 
+const DISCOVERY_TIMEOUT = 3000;
+
 export default class SonosNetwork {
   devices: SonosDevice[] = [];
   zoneGroups: any[] = [];
+  listener = Listener;
 
   constructor() {}
 
-  init() {
-    // event on all found...
-    DeviceDiscovery((sonosDevice: SonosDevice) => {
-      const device = sonosDevice;
-      device
-        .deviceDescription()
-        .then((description: { roomName: string; displayName: string; UDN: string }) => {
-          device.name = description.roomName;
-          device.displayName = description.displayName;
-          const UUID = description.UDN.split('uuid:')[1];
-          device.id = UUID;
-        });
+  public async init() {
+    this.devices = [];
+    await this.discover();
+    return this.getDevices();
+  }
 
-      this.devices.push(device);
-      console.log('found device at', device.host);
-      // mute every device...
-      // device.setMuted(true).then(`${device.host} now muted`);
+  public async getDevices(): Promise<SonosDevice[]> {
+    return this.devices;
+  }
+
+  private async discover(): Promise<SonosDevice[]> {
+    return new Promise(resolve => {
+      const sonosSearch = DeviceDiscovery({ timeout: DISCOVERY_TIMEOUT });
+
+      sonosSearch.on('DeviceAvailable', async (device: SonosDevice) => {
+        const sonosDevice = await this.getDescription(device);
+        const subscribedDevice = await this.subscribeTo(sonosDevice);
+        if (subscribedDevice) {
+          this.devices.push(subscribedDevice);
+        }
+      });
+
+      sonosSearch.on('timeout', () => {
+        resolve(this.devices);
+      });
     });
+  }
 
-    // find one device
-    // DeviceDiscovery().once('DeviceAvailable', (sonosDevice: SonosDevice) => {
-    //   console.log(this.devices);
+  private async getDescription(device: SonosDevice): Promise<SonosDevice> {
+    const description: {
+      roomName: string;
+      displayName: string;
+      UDN: string;
+    } = await device.deviceDescription();
+    device.name = description.roomName;
+    device.displayName = description.displayName;
+    device.id = description.UDN.split('uuid:')[1];
+    return device;
+  }
 
-    //   // get all groups
-    //   device.getAllGroups().then(console.log);
-    // });
+  private async subscribeTo(device: SonosDevice): Promise<SonosDevice | null> {
+    try {
+      await this.listener.subscribeTo(device);
+      return device;
+    } catch (error) {
+      console.log(`Could not subscribe to ${device.name} - ${device.displayName}`);
+      return null;
+    }
   }
 }

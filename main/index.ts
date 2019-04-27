@@ -8,7 +8,7 @@ let mainWindow: BrowserWindow;
 let tray: Tray;
 let sonosNetwork: SonosNetwork;
 
-function init() {
+async function init() {
   mainWindow = initMainWindow();
   mainWindow.loadURL('http://localhost:3000');
 
@@ -25,7 +25,9 @@ function init() {
   mainWindow.on('closed', (): void => (mainWindow = null));
 
   sonosNetwork = new SonosNetwork();
-  sonosNetwork.init();
+  const devices = await sonosNetwork.init();
+
+  console.log(`Discovered ${devices.length} devices`);
 }
 
 app.on('ready', init);

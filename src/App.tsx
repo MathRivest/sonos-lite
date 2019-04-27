@@ -8,6 +8,8 @@ const App: FC = () => {
     <div className={Styles.App}>
       <ElectronDragBar />
       <Player />
+      <div>Currently Playing:</div>
+      <div>Up next:</div>
     </div>
   );
 };
