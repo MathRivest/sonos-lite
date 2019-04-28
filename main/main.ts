@@ -10,6 +10,7 @@ export function initMainWindow(): BrowserWindow {
     backgroundColor: '#000000',
     darkTheme: true,
     frame: false,
+    // show: false,
     webPreferences: {
       nodeIntegration: true,
     },

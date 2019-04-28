@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray } from 'electron';
+import { app, BrowserWindow, Tray, ipcMain, IpcMessageEvent } from 'electron';
 import { initMainWindow } from './main';
 import { initTray } from './tray';
 
@@ -28,6 +28,8 @@ async function init() {
   const devices = await sonosNetwork.init();
 
   console.log(`Discovered ${devices.length} devices`);
+
+  mainWindow.webContents.send('SonosNetwork:ready', devices);
 }
 
 app.on('ready', init);
@@ -47,3 +49,13 @@ function handleTrayClick() {
     mainWindow.show();
   }
 }
+
+// In main process.
+ipcMain.on('App:loaded', async (event: any, arg: any) => {
+  console.log('TESTING!', arg);
+  console.log(sonosNetwork.isReady);
+  if (sonosNetwork && sonosNetwork.isReady) {
+    const devices = await sonosNetwork.getDevices();
+    mainWindow.webContents.send('SonosNetwork:ready', { devices });
+  }
+});

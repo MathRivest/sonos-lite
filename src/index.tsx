@@ -3,6 +3,17 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+import { IpcRenderer } from 'electron';
+
+declare global {
+  interface Window {
+    require: (
+      module: 'electron',
+    ) => {
+      ipcRenderer: IpcRenderer;
+    };
+  }
+}
 
 ReactDOM.render(<App />, document.getElementById('root'));
 

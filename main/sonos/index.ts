@@ -1,12 +1,6 @@
-const { DeviceDiscovery, Listener } = require('sonos');
+import { SonosDevice } from '../../common/types';
 
-type SonosDevice = {
-  deviceDescription: () => any;
-  host: unknown;
-  name: string;
-  displayName: string;
-  id: string;
-};
+const { DeviceDiscovery, Listener } = require('sonos');
 
 const DISCOVERY_TIMEOUT = 3000;
 
@@ -14,12 +8,14 @@ export default class SonosNetwork {
   devices: SonosDevice[] = [];
   zoneGroups: any[] = [];
   listener = Listener;
+  isReady = false;
 
   constructor() {}
 
   public async init() {
     this.devices = [];
     await this.discover();
+    this.isReady = true;
     return this.getDevices();
   }
 
