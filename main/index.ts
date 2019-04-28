@@ -3,6 +3,8 @@ import { initMainWindow } from './main';
 import { initTray } from './tray';
 
 import SonosNetwork from './sonos';
+import { sendRendererMessage } from './helpers';
+import { IPCEventPayload } from '../common/types';
 
 let mainWindow: BrowserWindow;
 let tray: Tray;
@@ -27,9 +29,12 @@ async function init() {
   sonosNetwork = new SonosNetwork();
   const devices = await sonosNetwork.init();
 
-  console.log(`Discovered ${devices.length} devices`);
-
-  mainWindow.webContents.send('SonosNetwork:ready', devices);
+  sendRendererMessage(mainWindow, {
+    type: 'SonosNetwork:ready',
+    payload: {
+      devices,
+    },
+  });
 }
 
 app.on('ready', init);
@@ -50,12 +55,28 @@ function handleTrayClick() {
   }
 }
 
-// In main process.
-ipcMain.on('App:loaded', async (event: any, arg: any) => {
-  console.log('TESTING!', arg);
-  console.log(sonosNetwork.isReady);
+/**
+ * ipcMain event listeners
+ */
+ipcMain.on('App:loaded', ipcMainListener);
+
+async function ipcMainListener(_event: IpcMessageEvent, data: IPCEventPayload): Promise<void> {
+  console.log(`Received ${data.type} ${data.payload}`);
+  switch (data.type) {
+    case 'App:loaded':
+      handleAppLoaded();
+      break;
+  }
+}
+
+async function handleAppLoaded(): Promise<void> {
   if (sonosNetwork && sonosNetwork.isReady) {
     const devices = await sonosNetwork.getDevices();
-    mainWindow.webContents.send('SonosNetwork:ready', { devices });
+    sendRendererMessage(mainWindow, {
+      type: 'SonosNetwork:ready',
+      payload: {
+        devices,
+      },
+    });
   }
-});
+}

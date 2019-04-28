@@ -3,7 +3,9 @@ import Styles from './App.module.css';
 import ElectronDragBar from './components/ElectronDragBar';
 import Player from './components/Player/Player';
 import SonosContext from './context/Sonos';
-import { SonosDevice } from '../common/types';
+import { SonosDevice, IPCEventPayload } from '../common/types';
+import { sendMainMessage } from './helpers';
+import { IpcMessageEvent } from 'electron';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -23,13 +25,20 @@ class App extends Component<{}, IAppState> {
     };
   }
   componentDidMount() {
-    ipcRenderer.send('App:loaded', 'testing');
-
-    ipcRenderer.on('SonosNetwork:ready', (_event: any, payload: any) => {
-      console.log('SonosNetwork is ready:', payload);
-      this.setState({ devices: payload.devices });
-    });
+    sendMainMessage({ type: 'App:loaded' });
+    ipcRenderer.on('SonosNetwork:ready', this.ipcRendererListener);
   }
+
+  ipcRendererListener = (_event: IpcMessageEvent, data: IPCEventPayload) => {
+    console.log(`%c Received ${data.type} ${data.payload}`, 'background: #333; color: #fff');
+    switch (data.type) {
+      case 'SonosNetwork:ready':
+        this.setState({ devices: data.payload.devices });
+        break;
+      default:
+        break;
+    }
+  };
 
   render() {
     const { devices } = this.state;

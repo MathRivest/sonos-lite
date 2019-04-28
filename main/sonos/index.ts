@@ -16,6 +16,7 @@ export default class SonosNetwork {
     this.devices = [];
     await this.discover();
     this.isReady = true;
+    console.log(`SonosNetwork::Discovered ${this.devices.length} devices`);
     return this.getDevices();
   }
 

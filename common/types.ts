@@ -6,7 +6,16 @@ export type SonosDevice = {
   id: string;
 };
 
-export type IPCEventAppLoaded = {
+export type IPCEventPayloadAppLoaded = {
   type: 'App:loaded';
-  payload: {};
+  payload?: null;
 };
+
+export type IPCEventPayloadSonosReady = {
+  type: 'SonosNetwork:ready';
+  payload: {
+    devices: SonosDevice[];
+  };
+};
+
+export type IPCEventPayload = IPCEventPayloadAppLoaded | IPCEventPayloadSonosReady;
