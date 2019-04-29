@@ -4,8 +4,6 @@ import Styles from './Player.module.css';
 const Player: FC = () => {
   return (
     <div className={Styles.Player}>
-      <br />
-      <br />
       <button>Play</button>
       <button>Pause</button>
       <button>Previous</button>

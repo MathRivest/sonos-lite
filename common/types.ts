@@ -21,10 +21,7 @@ export type SonosTrack = {
   position: number;
 };
 
-export type IPCEventPayloadAppLoaded = {
-  type: 'App:loaded';
-  payload?: null;
-};
+export type IPCMainEvent = IPCEventPayloadSonosReady | IPCEventPayloadSonosCurrentTrack;
 
 export type IPCEventPayloadSonosReady = {
   type: 'SonosNetwork:ready';
@@ -40,13 +37,16 @@ export type IPCEventPayloadSonosCurrentTrack = {
   };
 };
 
+export type IPCRendererEvent = IPCEventPayloadAppLoaded | IPCEventPayloadRoomLoaded;
+
+export type IPCEventPayloadAppLoaded = {
+  type: 'App:loaded';
+  payload?: null;
+};
+
 export type IPCEventPayloadRoomLoaded = {
   type: 'Room:loaded';
   payload: {
     deviceId: string;
   };
 };
-
-type IPCMainEvent = IPCEventPayloadSonosReady | IPCEventPayloadSonosCurrentTrack;
-type IPCRendererEvent = IPCEventPayloadAppLoaded | IPCEventPayloadRoomLoaded;
-export type IPCEventPayload = IPCMainEvent | IPCRendererEvent;

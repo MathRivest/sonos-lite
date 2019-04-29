@@ -4,7 +4,7 @@ import { initTray } from './tray';
 
 import SonosNetwork from './sonos';
 import { sendRendererMessage } from './helpers';
-import { IPCEventPayload, IPCEventPayloadRoomLoaded, SonosTrack } from '../common/types';
+import { IPCEventPayloadRoomLoaded, SonosTrack, IPCRendererEvent } from '../common/types';
 import { async } from 'q';
 
 let mainWindow: BrowserWindow;
@@ -62,7 +62,7 @@ function handleTrayClick() {
 ipcMain.on('App:loaded', ipcMainListener);
 ipcMain.on('Room:loaded', ipcMainListener);
 
-async function ipcMainListener(_event: IpcMessageEvent, data: IPCEventPayload): Promise<void> {
+async function ipcMainListener(_event: IpcMessageEvent, data: IPCRendererEvent): Promise<void> {
   console.log(`Received ${data.type}, ${data.payload}`);
   switch (data.type) {
     case 'App:loaded':
@@ -87,7 +87,7 @@ async function handleAppLoaded(): Promise<void> {
 }
 
 async function handleRoomLoaded(data: IPCEventPayloadRoomLoaded): Promise<void> {
-  let track: SonosTrack;
+  let track: SonosTrack | null;
   try {
     track = await sonosNetwork.getDeviceTrack(data.payload.deviceId);
     track = track.duration === 0 ? null : track;

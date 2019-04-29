@@ -1,5 +1,5 @@
 .Player {
-  height: 220px;
-  background: green;
-  padding-top: 24px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: lightblue;
 }

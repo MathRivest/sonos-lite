@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
-import { SonosDevice, IPCEventPayload, SonosTrack } from '../../common/types';
+import { SonosDevice, SonosTrack, IPCMainEvent } from '../../common/types';
 import { sendMainMessage } from '../helpers';
 import { IpcMessageEvent } from 'electron';
+import Player from './Player/Player';
+import Styles from './Room.module.css';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -38,7 +40,7 @@ class Room extends Component<IRoomProps, IRoomState> {
     ipcRenderer.removeListener('SonosNetwork:currentTrack', this.ipcRendererListener);
   }
 
-  ipcRendererListener = (_event: IpcMessageEvent, data: IPCEventPayload) => {
+  ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {
     console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
     switch (data.type) {
       case 'SonosNetwork:currentTrack':
@@ -59,7 +61,8 @@ class Room extends Component<IRoomProps, IRoomState> {
     }
 
     return (
-      <div>
+      <div className={Styles.Room}>
+        <Player />
         <div>{track.title}</div>
         <div>
           {track.position}|{track.duration}

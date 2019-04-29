@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import Styles from './App.module.css';
 import ElectronDragBar from './components/ElectronDragBar';
-import Player from './components/Player/Player';
 import SonosContext from './context/Sonos';
-import { SonosDevice, IPCEventPayload } from '../common/types';
+import { SonosDevice, IPCMainEvent } from '../common/types';
 import { sendMainMessage } from './helpers';
 import { IpcMessageEvent } from 'electron';
 import Rooms from './components/Rooms';
@@ -43,7 +42,7 @@ class App extends Component<{}, IAppState> {
     ipcRenderer.on('SonosNetwork:ready', this.ipcRendererListener);
   }
 
-  ipcRendererListener = (_event: IpcMessageEvent, data: IPCEventPayload) => {
+  ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {
     console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
     switch (data.type) {
       case 'SonosNetwork:ready':
@@ -64,16 +63,9 @@ class App extends Component<{}, IAppState> {
       <div className={Styles.App}>
         <SonosContext.Provider value={this.state}>
           <ElectronDragBar />
-          <Player />
           <Rooms />
-          <br />
-          <div>
-            {activeDevice ? (
-              <Room device={activeDevice} key={activeDevice.id} />
-            ) : (
-              'No Device Selected'
-            )}
-          </div>
+          {activeDevice && <Room device={activeDevice} key={activeDevice.id} />}
+          {!activeDevice && <div>No Device Selected</div>}
 
           {/* <br />
           <div>Up next:</div> */}
