@@ -1,25 +1,22 @@
-import SonosContext from '../context/Sonos';
 import React, { FC } from 'react';
+import { SonosDevice } from '../../common/types';
 
-const Rooms: FC = () => {
+interface IRoomsProps {
+  devices: SonosDevice[];
+  activeDevice: SonosDevice | undefined;
+  setActiveDevice: (deviceId: string) => void;
+}
+const Rooms: FC<IRoomsProps> = ({ devices, activeDevice, setActiveDevice }) => {
   return (
-    <SonosContext.Consumer>
-      {context => (
-        <select onChange={event => context.setActiveDevice(event.target.value)}>
-          {context.devices.map(({ displayName, name, id }) => {
-            return (
-              <option
-                key={id}
-                value={id}
-                defaultValue={context.activeDevice ? context.activeDevice.id : ''}
-              >
-                {name} - {displayName}
-              </option>
-            );
-          })}
-        </select>
-      )}
-    </SonosContext.Consumer>
+    <select onChange={event => setActiveDevice(event.target.value)}>
+      {devices.map(({ displayName, name, id }) => {
+        return (
+          <option key={id} value={id} defaultValue={activeDevice ? activeDevice.id : ''}>
+            {name} - {displayName}
+          </option>
+        );
+      })}
+    </select>
   );
 };
 

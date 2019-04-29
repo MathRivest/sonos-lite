@@ -1,8 +1,9 @@
 # Sonos Lite Desktop Client
 
-- [ ] Current Room
-- [ ] Current track info
+- [X] Room dropdown
+- [X] Current room
+- [X] Current track info
+- [ ] Current track update
 - [ ] Play/pause
-- [ ] Room dropdown
 - [ ] Queue
 - [ ] Key bindings

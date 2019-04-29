@@ -57,18 +57,17 @@ class App extends Component<{}, IAppState> {
   };
 
   render() {
-    const { activeDevice } = this.state;
+    const { devices, activeDevice, setActiveDevice } = this.state;
 
     return (
       <div className={Styles.App}>
         <SonosContext.Provider value={this.state}>
           <ElectronDragBar />
-          <Rooms />
+          <Rooms devices={devices} activeDevice={activeDevice} setActiveDevice={setActiveDevice} />
+          <br />
+          <br />
           {activeDevice && <Room device={activeDevice} key={activeDevice.id} />}
           {!activeDevice && <div>No Device Selected</div>}
-
-          {/* <br />
-          <div>Up next:</div> */}
         </SonosContext.Provider>
       </div>
     );
