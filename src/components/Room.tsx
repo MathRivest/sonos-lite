@@ -7,6 +7,7 @@ const { ipcRenderer } = window.require('electron');
 
 interface IRoomProps {
   device: SonosDevice;
+  key: string;
 }
 
 interface IRoomState {
@@ -31,6 +32,10 @@ class Room extends Component<IRoomProps, IRoomState> {
     });
 
     ipcRenderer.on('SonosNetwork:currentTrack', this.ipcRendererListener);
+  }
+
+  componentWillUnmount() {
+    ipcRenderer.removeListener('SonosNetwork:currentTrack', this.ipcRendererListener);
   }
 
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCEventPayload) => {

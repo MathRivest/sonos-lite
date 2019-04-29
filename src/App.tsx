@@ -67,7 +67,13 @@ class App extends Component<{}, IAppState> {
           <Player />
           <Rooms />
           <br />
-          <div>{activeDevice ? <Room device={activeDevice} /> : 'No Device Selected'}</div>
+          <div>
+            {activeDevice ? (
+              <Room device={activeDevice} key={activeDevice.id} />
+            ) : (
+              'No Device Selected'
+            )}
+          </div>
 
           {/* <br />
           <div>Up next:</div> */}
