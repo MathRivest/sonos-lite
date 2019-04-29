@@ -1,7 +1,9 @@
 import { BrowserWindow } from 'electron';
+const path = require('path');
+const os = require('os');
 
 export function initMainWindow(): BrowserWindow {
-  return new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 220,
     height: 380,
     resizable: false,
@@ -15,4 +17,13 @@ export function initMainWindow(): BrowserWindow {
       nodeIntegration: true,
     },
   });
+
+  BrowserWindow.addDevToolsExtension(
+    path.join(
+      os.homedir(),
+      '/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0',
+    ),
+  );
+
+  return mainWindow;
 }
