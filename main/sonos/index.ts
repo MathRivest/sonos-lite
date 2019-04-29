@@ -1,4 +1,4 @@
-import { SonosDevice } from '../../common/types';
+import { SonosDevice, SonosTrack } from '../../common/types';
 
 const { DeviceDiscovery, Listener } = require('sonos');
 
@@ -22,6 +22,15 @@ export default class SonosNetwork {
 
   public async getDevices(): Promise<SonosDevice[]> {
     return this.devices;
+  }
+
+  private getDevice(deviceId: string): SonosDevice {
+    return this.devices.find(device => device.id === deviceId);
+  }
+
+  public async getDeviceTrack(deviceId: string): Promise<SonosTrack> {
+    const device = this.getDevice(deviceId);
+    return device.currentTrack();
   }
 
   private async discover(): Promise<SonosDevice[]> {

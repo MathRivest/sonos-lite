@@ -4,7 +4,8 @@ import { initTray } from './tray';
 
 import SonosNetwork from './sonos';
 import { sendRendererMessage } from './helpers';
-import { IPCEventPayload } from '../common/types';
+import { IPCEventPayload, IPCEventPayloadRoomLoaded } from '../common/types';
+import { async } from 'q';
 
 let mainWindow: BrowserWindow;
 let tray: Tray;
@@ -59,12 +60,16 @@ function handleTrayClick() {
  * ipcMain event listeners
  */
 ipcMain.on('App:loaded', ipcMainListener);
+ipcMain.on('Room:loaded', ipcMainListener);
 
 async function ipcMainListener(_event: IpcMessageEvent, data: IPCEventPayload): Promise<void> {
-  console.log(`Received ${data.type} ${data.payload}`);
+  console.log(`Received ${data.type}, ${data.payload}`);
   switch (data.type) {
     case 'App:loaded':
       handleAppLoaded();
+      break;
+    case 'Room:loaded':
+      handleRoomLoaded(data);
       break;
   }
 }
@@ -79,4 +84,14 @@ async function handleAppLoaded(): Promise<void> {
       },
     });
   }
+}
+
+async function handleRoomLoaded(data: IPCEventPayloadRoomLoaded): Promise<void> {
+  const track = await sonosNetwork.getDeviceTrack(data.payload.deviceId);
+  sendRendererMessage(mainWindow, {
+    type: 'SonosNetwork:currentTrack',
+    payload: {
+      track,
+    },
+  });
 }

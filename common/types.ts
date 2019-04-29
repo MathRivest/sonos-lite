@@ -1,9 +1,24 @@
-export type SonosDevice = {
+type Sonos = {
+  currentTrack: () => any;
   deviceDescription: () => any;
   host: unknown;
-  name: string;
-  displayName: string;
+};
+
+export type SonosDevice = Sonos & {
   id: string;
+  displayName: string;
+  name: string;
+};
+
+export type SonosTrack = {
+  album: string;
+  albumArtURI: string;
+  albumArtURL: string;
+  artist: string;
+  duration: number;
+  id: string | null;
+  title: string;
+  position: number;
 };
 
 export type IPCEventPayloadAppLoaded = {
@@ -18,4 +33,20 @@ export type IPCEventPayloadSonosReady = {
   };
 };
 
-export type IPCEventPayload = IPCEventPayloadAppLoaded | IPCEventPayloadSonosReady;
+export type IPCEventPayloadSonosCurrentTrack = {
+  type: 'SonosNetwork:currentTrack';
+  payload: {
+    track: SonosTrack;
+  };
+};
+
+export type IPCEventPayloadRoomLoaded = {
+  type: 'Room:loaded';
+  payload: {
+    deviceId: string;
+  };
+};
+
+type IPCMainEvent = IPCEventPayloadSonosReady | IPCEventPayloadSonosCurrentTrack;
+type IPCRendererEvent = IPCEventPayloadAppLoaded | IPCEventPayloadRoomLoaded;
+export type IPCEventPayload = IPCMainEvent | IPCRendererEvent;

@@ -1,4 +1,4 @@
-import SonosContext from '../../context/Sonos';
+import SonosContext from '../context/Sonos';
 import React, { FC } from 'react';
 
 const Rooms: FC = () => {
@@ -9,8 +9,9 @@ const Rooms: FC = () => {
           {context.devices.map(({ displayName, name, id }) => {
             return (
               <option
+                key={id}
                 value={id}
-                selected={context.activeDevice ? context.activeDevice.id === id : false}
+                defaultValue={context.activeDevice ? context.activeDevice.id : ''}
               >
                 {name} - {displayName}
               </option>

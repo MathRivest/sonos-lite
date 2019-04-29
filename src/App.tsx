@@ -6,13 +6,10 @@ import SonosContext from './context/Sonos';
 import { SonosDevice, IPCEventPayload } from '../common/types';
 import { sendMainMessage } from './helpers';
 import { IpcMessageEvent } from 'electron';
-import Rooms from './components/Devices/Rooms';
+import Rooms from './components/Rooms';
+import Room from './components/Room';
 
 const { ipcRenderer } = window.require('electron');
-
-ipcRenderer.on('Main:received', (event: any, arg: any) => {
-  console.log(arg);
-});
 
 interface IAppState {
   devices: SonosDevice[];
@@ -47,7 +44,7 @@ class App extends Component<{}, IAppState> {
   }
 
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCEventPayload) => {
-    console.log(`%c Received ${data.type} ${data.payload}`, 'background: #333; color: #fff');
+    console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
     switch (data.type) {
       case 'SonosNetwork:ready':
         const {
@@ -70,10 +67,10 @@ class App extends Component<{}, IAppState> {
           <Player />
           <Rooms />
           <br />
-          <br />
-          <div>{activeDevice ? `Now Playing - ${activeDevice.name}` : 'No Device Selected'}</div>
-          <br />
-          <div>Up next:</div>
+          <div>{activeDevice ? <Room device={activeDevice} /> : 'No Device Selected'}</div>
+
+          {/* <br />
+          <div>Up next:</div> */}
         </SonosContext.Provider>
       </div>
     );
