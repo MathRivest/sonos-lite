@@ -24,7 +24,7 @@ export default class SonosNetwork {
     return this.devices;
   }
 
-  private getDevice(deviceId: string): SonosDevice {
+  public getDevice(deviceId: string): SonosDevice {
     return this.devices.find(device => device.id === deviceId);
   }
 

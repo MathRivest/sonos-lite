@@ -1,7 +1,11 @@
 type Sonos = {
-  currentTrack: () => any;
-  deviceDescription: () => any;
   host: unknown;
+  currentTrack: () => SonosTrack;
+  deviceDescription: () => any;
+  play: () => Promise<void>;
+  pause: () => Promise<void>;
+  previous: () => Promise<void>;
+  next: () => Promise<void>;
 };
 
 export type SonosDevice = Sonos & {
@@ -37,7 +41,10 @@ export type IPCEventPayloadSonosCurrentTrack = {
   };
 };
 
-export type IPCRendererEvent = IPCEventPayloadAppLoaded | IPCEventPayloadRoomLoaded;
+export type IPCRendererEvent =
+  | IPCEventPayloadAppLoaded
+  | IPCEventPayloadRoomLoaded
+  | IPCEventPayloadPlayerCommand;
 
 export type IPCEventPayloadAppLoaded = {
   type: 'App:loaded';
@@ -48,5 +55,13 @@ export type IPCEventPayloadRoomLoaded = {
   type: 'Room:loaded';
   payload: {
     deviceId: string;
+  };
+};
+
+export type IPCEventPayloadPlayerCommand = {
+  type: 'Player:command';
+  payload: {
+    deviceId: string;
+    command: 'play' | 'pause' | 'previous' | 'next';
   };
 };

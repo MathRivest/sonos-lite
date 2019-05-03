@@ -39,7 +39,11 @@ class App extends Component<{}, IAppState> {
 
   componentDidMount() {
     sendMainMessage({ type: 'App:loaded' });
-    ipcRenderer.on('SonosNetwork:ready', this.ipcRendererListener);
+    ipcRenderer.on('Main:message', this.ipcRendererListener);
+  }
+
+  componentWillUnmount() {
+    ipcRenderer.removeListener('Main:message', this.ipcRendererListener);
   }
 
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {

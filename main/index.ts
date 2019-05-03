@@ -2,14 +2,21 @@ import { app, BrowserWindow, Tray, ipcMain, IpcMessageEvent } from 'electron';
 import { initMainWindow } from './main';
 import { initTray } from './tray';
 
-import SonosNetwork from './sonos';
 import { sendRendererMessage } from './helpers';
-import { IPCEventPayloadRoomLoaded, SonosTrack, IPCRendererEvent } from '../common/types';
-import { async } from 'q';
+import {
+  IPCEventPayloadRoomLoaded,
+  IPCRendererEvent,
+  IPCEventPayloadPlayerCommand,
+  SonosTrack,
+} from '../common/types';
+
+import SonosNetwork from './sonos/sonosNetwork';
+import SonosPlayer from './sonos/sonosPlayer';
 
 let mainWindow: BrowserWindow;
 let tray: Tray;
 let sonosNetwork: SonosNetwork;
+let sonosPlayer: SonosPlayer;
 
 async function init() {
   mainWindow = initMainWindow();
@@ -28,6 +35,8 @@ async function init() {
   mainWindow.on('closed', (): void => (mainWindow = null));
 
   sonosNetwork = new SonosNetwork();
+  sonosPlayer = new SonosPlayer(sonosNetwork);
+
   const devices = await sonosNetwork.init();
 
   sendRendererMessage(mainWindow, {
@@ -59,17 +68,19 @@ function handleTrayClick() {
 /**
  * ipcMain event listeners
  */
-ipcMain.on('App:loaded', ipcMainListener);
-ipcMain.on('Room:loaded', ipcMainListener);
+ipcMain.on('App:message', ipcMainListener);
 
 async function ipcMainListener(_event: IpcMessageEvent, data: IPCRendererEvent): Promise<void> {
-  console.log(`Received ${data.type}, ${data.payload}`);
+  console.log(`Received ${data.type}`, data.payload);
   switch (data.type) {
     case 'App:loaded':
       handleAppLoaded();
       break;
     case 'Room:loaded':
       handleRoomLoaded(data);
+      break;
+    case 'Player:command':
+      handlePlayerCommand(data);
       break;
   }
 }
@@ -101,4 +112,9 @@ async function handleRoomLoaded(data: IPCEventPayloadRoomLoaded): Promise<void> 
       track,
     },
   });
+}
+
+async function handlePlayerCommand(data: IPCEventPayloadPlayerCommand): Promise<void> {
+  await sonosPlayer.setActiveDevice(data.payload.deviceId);
+  await sonosPlayer.sendCommand(data.payload.command);
 }

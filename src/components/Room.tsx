@@ -33,11 +33,11 @@ class Room extends Component<IRoomProps, IRoomState> {
       },
     });
 
-    ipcRenderer.on('SonosNetwork:currentTrack', this.ipcRendererListener);
+    ipcRenderer.on('Main:message', this.ipcRendererListener);
   }
 
   componentWillUnmount() {
-    ipcRenderer.removeListener('SonosNetwork:currentTrack', this.ipcRendererListener);
+    ipcRenderer.removeListener('Main:message', this.ipcRendererListener);
   }
 
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {
@@ -54,6 +54,60 @@ class Room extends Component<IRoomProps, IRoomState> {
     }
   };
 
+  handlePlayerOnPlay = () => {
+    const { device } = this.props;
+    sendMainMessage({
+      type: 'Player:command',
+      payload: {
+        command: 'play',
+        deviceId: device.id,
+      },
+    });
+  };
+
+  handlePlayerOnPause = () => {
+    const { device } = this.props;
+    sendMainMessage({
+      type: 'Player:command',
+      payload: {
+        command: 'pause',
+        deviceId: device.id,
+      },
+    });
+  };
+
+  handlePlayerOnPrevious = () => {
+    const { device } = this.props;
+    sendMainMessage({
+      type: 'Player:command',
+      payload: {
+        command: 'previous',
+        deviceId: device.id,
+      },
+    });
+  };
+
+  handlePlayerOnNext = () => {
+    const { device } = this.props;
+    sendMainMessage({
+      type: 'Player:command',
+      payload: {
+        command: 'next',
+        deviceId: device.id,
+      },
+    });
+  };
+
+  renderPlayer = () => {
+    const playerProps = {
+      onPlay: this.handlePlayerOnPlay,
+      onPause: this.handlePlayerOnPause,
+      onPrevious: this.handlePlayerOnPrevious,
+      onNext: this.handlePlayerOnNext,
+    };
+    return <Player {...playerProps} />;
+  };
+
   renderTrack() {
     const { track } = this.state;
     if (!track) {
@@ -62,7 +116,7 @@ class Room extends Component<IRoomProps, IRoomState> {
 
     return (
       <div className={Styles.Room}>
-        <Player />
+        {this.renderPlayer()}
         <div>{track.title}</div>
         <div>
           {track.position}|{track.duration}
