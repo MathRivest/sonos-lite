@@ -4,9 +4,47 @@ const { DeviceDiscovery, Listener } = require('sonos');
 
 const DISCOVERY_TIMEOUT = 3000;
 
+const IS_MOCK_MODE: boolean = false;
+const MOCK_DEVICES: SonosDevice[] = [
+  {
+    id: 'mock-play1-1',
+    name: 'Mock Play 1',
+    displayName: 'Bedroom',
+    host: 'mock host',
+    currentTrack: () => null,
+    deviceDescription: () => null,
+    play: () => null,
+    pause: () => null,
+    previous: () => null,
+    next: () => null,
+  },
+  {
+    id: 'mock-play1-2',
+    name: 'Mock Play 1',
+    displayName: 'Office',
+    host: 'mock host',
+    currentTrack: () => {
+      return {
+        album: 'AlbumName',
+        albumArtURI: 'http://album-art',
+        albumArtURL: 'http://album-art',
+        artist: 'ArtistName',
+        duration: 1000,
+        id: 'track-1',
+        title: 'TrackTitle',
+        position: 10,
+      };
+    },
+    deviceDescription: () => null,
+    play: () => null,
+    pause: () => null,
+    previous: () => null,
+    next: () => null,
+  },
+];
+
 export default class SonosNetwork {
   devices: SonosDevice[] = [];
-  zoneGroups: any[] = [];
   listener = Listener;
   isReady = false;
 
@@ -21,15 +59,19 @@ export default class SonosNetwork {
   }
 
   public async getDevices(): Promise<SonosDevice[]> {
+    if (IS_MOCK_MODE) {
+      return MOCK_DEVICES;
+    }
     return this.devices;
   }
 
-  public getDevice(deviceId: string): SonosDevice {
-    return this.devices.find(device => device.id === deviceId);
+  public async getDevice(deviceId: string): Promise<SonosDevice> {
+    const devices = await this.getDevices();
+    return devices.find(device => device.id === deviceId);
   }
 
   public async getDeviceTrack(deviceId: string): Promise<SonosTrack> {
-    const device = this.getDevice(deviceId);
+    const device = await this.getDevice(deviceId);
     return device.currentTrack();
   }
 

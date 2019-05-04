@@ -111,7 +111,12 @@ class Room extends Component<IRoomProps, IRoomState> {
   renderTrack() {
     const { track } = this.state;
     if (!track) {
-      return 'Nothing Playing';
+      return (
+        <div>
+          <br />
+          Nothing Playing
+        </div>
+      );
     }
 
     return (

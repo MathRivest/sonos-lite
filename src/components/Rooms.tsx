@@ -11,7 +11,7 @@ const Rooms: FC<IRoomsProps> = ({ devices, activeDevice, setActiveDevice }) => {
     <select onChange={event => setActiveDevice(event.target.value)}>
       {devices.map(({ displayName, name, id }) => {
         return (
-          <option key={id} value={id} defaultValue={activeDevice ? activeDevice.id : ''}>
+          <option key={id} value={id} selected={activeDevice ? activeDevice.id === id : false}>
             {name} - {displayName}
           </option>
         );

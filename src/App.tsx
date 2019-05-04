@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import Styles from './App.module.css';
 import ElectronDragBar from './components/ElectronDragBar';
-import SonosContext from './context/Sonos';
-import { SonosDevice, IPCMainEvent } from '../common/types';
-import { sendMainMessage } from './helpers';
+import { SonosDevice, IPCMainEvent, IPCEventPayloadSonosReady } from '../common/types';
+import { sendMainMessage, setLocalStorage, getLocalStorage } from './helpers';
 import { IpcMessageEvent } from 'electron';
 import Rooms from './components/Rooms';
 import Room from './components/Room';
@@ -13,27 +12,17 @@ const { ipcRenderer } = window.require('electron');
 interface IAppState {
   devices: SonosDevice[];
   activeDevice: SonosDevice | undefined;
-  setActiveDevice: (deviceId: string) => void;
+  isLoading: boolean;
 }
 
 class App extends Component<{}, IAppState> {
-  setActiveDevice: (deviceId: string) => void;
   constructor(props: {}) {
     super(props);
-
-    this.setActiveDevice = (deviceId: string) => {
-      this.setState(state => {
-        const activeDevice = state.devices.find(device => device.id === deviceId);
-        return {
-          activeDevice,
-        };
-      });
-    };
 
     this.state = {
       devices: [],
       activeDevice: undefined,
-      setActiveDevice: this.setActiveDevice,
+      isLoading: true,
     };
   }
 
@@ -50,40 +39,81 @@ class App extends Component<{}, IAppState> {
     console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
     switch (data.type) {
       case 'SonosNetwork:ready':
-        const {
-          payload: { devices },
-        } = data;
-        this.setState({ devices: data.payload.devices, activeDevice: devices[0] });
+        this.handleSonosNetworkReady(data);
         break;
       default:
         break;
     }
   };
 
+  handleSonosNetworkReady = (data: IPCEventPayloadSonosReady) => {
+    const {
+      payload: { devices },
+    } = data;
+    const storedActiveDeviceId = getLocalStorage('activeDeviceId');
+    const device = devices.find(({ id }) => id === storedActiveDeviceId);
+    const activeDevice = device ? device : devices[0];
+
+    this.setState({
+      devices: data.payload.devices,
+      activeDevice,
+      isLoading: false,
+    });
+  };
+
+  setActiveDevice = (deviceId: string) => {
+    this.setState(
+      state => {
+        const activeDevice = state.devices.find(device => device.id === deviceId);
+        return {
+          activeDevice,
+        };
+      },
+      () => {
+        if (this.state.activeDevice) {
+          setLocalStorage('activeDeviceId', this.state.activeDevice.id);
+        }
+      },
+    );
+  };
+
+  renderEmptyState() {
+    return <div>No devices found</div>;
+  }
+
+  renderLoadingState() {
+    return <div>Discovering your Sonos devices...</div>;
+  }
+
+  renderReadyState() {
+    const { devices, activeDevice } = this.state;
+    return (
+      <div>
+        <Rooms
+          devices={devices}
+          activeDevice={activeDevice}
+          setActiveDevice={this.setActiveDevice}
+        />
+        <br />
+        <br />
+        {activeDevice && <Room device={activeDevice} key={activeDevice.id} />}
+      </div>
+    );
+  }
+
   render() {
-    const { devices, activeDevice, setActiveDevice } = this.state;
+    const { devices, isLoading } = this.state;
 
     return (
       <div className={Styles.App}>
-        <SonosContext.Provider value={this.state}>
-          <ElectronDragBar />
-          <Rooms devices={devices} activeDevice={activeDevice} setActiveDevice={setActiveDevice} />
-          <br />
-          <br />
-          {activeDevice && <Room device={activeDevice} key={activeDevice.id} />}
-          {!activeDevice && <div>No Device Selected</div>}
-        </SonosContext.Provider>
+        <ElectronDragBar />
+        <br />
+        {isLoading && this.renderLoadingState()}
+        {!isLoading && devices.length === 0 && this.renderEmptyState()}
+        {devices.length > 0 && this.renderReadyState()}
       </div>
     );
   }
 }
-
-// const App: FC = () => {
-// console.log(ipcRenderer);
-// ipcRenderer.on('pong', (event: any, arg: any) => {
-//   console.log('pong');
-// });
-// ipcRenderer.send('ping allo');
-// };
 
 export default App;
