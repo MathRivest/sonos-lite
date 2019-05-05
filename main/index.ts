@@ -4,10 +4,13 @@ import { initTray } from './tray';
 
 import { sendRendererMessage } from './helpers';
 import {
-  IPCEventPayloadRoomLoaded,
   IPCRendererEvent,
+  IPCEventPayloadRoomLoaded,
   IPCEventPayloadPlayerCommand,
+  IPCEventPayloadPlayerGetPosition,
   SonosTrack,
+  SonosDevice,
+  SonosPlayState,
 } from '../common/types';
 
 import SonosNetwork from './sonos/sonosNetwork';
@@ -79,8 +82,14 @@ async function ipcMainListener(_event: IpcMessageEvent, data: IPCRendererEvent):
     case 'Room:loaded':
       handleRoomLoaded(data);
       break;
+    case 'Room:changed':
+      unsubscribeFromDevices();
+      break;
     case 'Player:command':
       handlePlayerCommand(data);
+      break;
+    case 'Player:getPosition':
+      handlePlayerGetPosition(data);
       break;
   }
 }
@@ -88,6 +97,7 @@ async function ipcMainListener(_event: IpcMessageEvent, data: IPCRendererEvent):
 async function handleAppLoaded(): Promise<void> {
   if (sonosNetwork && sonosNetwork.isReady) {
     const devices = await sonosNetwork.getDevices();
+    unsubscribeFromDevices();
     sendRendererMessage(mainWindow, {
       type: 'SonosNetwork:ready',
       payload: {
@@ -98,23 +108,71 @@ async function handleAppLoaded(): Promise<void> {
 }
 
 async function handleRoomLoaded(data: IPCEventPayloadRoomLoaded): Promise<void> {
-  let track: SonosTrack | null;
-  try {
-    track = await sonosNetwork.getDeviceTrack(data.payload.deviceId);
-    track = track.duration === 0 ? null : track;
-  } catch (error) {
-    track = null;
-  }
+  let device: SonosDevice = await sonosNetwork.getDevice(data.payload.deviceId);
+  let track: SonosTrack | null = null;
+  let playState: SonosPlayState;
 
+  await sonosPlayer.setActiveDevice(device.id);
+  try {
+    track = await device.currentTrack();
+    track = track.duration === 0 ? null : track;
+    playState = await device.getCurrentState();
+  } catch (error) {}
+
+  handleCurrentTrackEvent(track);
+  handlePlayStateEvent(playState);
+
+  device.on('CurrentTrack', handleCurrentTrackEvent);
+  device.on('PlayState', handlePlayStateEvent);
+}
+
+async function handleCurrentTrackEvent(track: SonosTrack) {
+  const position = await sonosPlayer.getPosition();
+  const payload = position
+    ? {
+        track: { ...track, position },
+      }
+    : {
+        track,
+      };
   sendRendererMessage(mainWindow, {
     type: 'SonosNetwork:currentTrack',
+    payload,
+  });
+}
+
+async function handlePlayStateEvent(playState: SonosPlayState) {
+  sendRendererMessage(mainWindow, {
+    type: 'SonosNetwork:playState',
     payload: {
-      track,
+      playState,
     },
   });
 }
 
 async function handlePlayerCommand(data: IPCEventPayloadPlayerCommand): Promise<void> {
-  await sonosPlayer.setActiveDevice(data.payload.deviceId);
   await sonosPlayer.sendCommand(data.payload.command);
+}
+
+async function handlePlayerGetPosition(_data: IPCEventPayloadPlayerGetPosition): Promise<void> {
+  const position = await sonosPlayer.getPosition();
+  if (position) {
+    sendRendererMessage(mainWindow, {
+      type: 'SonosNetwork:currentPartialTrack',
+      payload: {
+        track: {
+          position,
+        },
+      },
+    });
+  }
+}
+
+function unsubscribeFromDevices(): void {
+  // Unsubscribe to all events when changing rooms
+  const devices = sonosNetwork.getDevices();
+  devices.forEach(device => {
+    device.removeListener('CurrentTrack', handleCurrentTrackEvent);
+    device.removeListener('PlayState', handlePlayStateEvent);
+  });
 }

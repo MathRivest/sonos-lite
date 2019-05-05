@@ -36,9 +36,9 @@ class App extends Component<{}, IAppState> {
   }
 
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {
-    console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
     switch (data.type) {
       case 'SonosNetwork:ready':
+        console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
         this.handleSonosNetworkReady(data);
         break;
       default:
@@ -61,7 +61,7 @@ class App extends Component<{}, IAppState> {
     });
   };
 
-  setActiveDevice = (deviceId: string) => {
+  handleRoomChange = (deviceId: string) => {
     this.setState(
       state => {
         const activeDevice = state.devices.find(device => device.id === deviceId);
@@ -73,6 +73,7 @@ class App extends Component<{}, IAppState> {
         if (this.state.activeDevice) {
           setLocalStorage('activeDeviceId', this.state.activeDevice.id);
         }
+        sendMainMessage({ type: 'Room:changed' });
       },
     );
   };
@@ -92,7 +93,7 @@ class App extends Component<{}, IAppState> {
         <Rooms
           devices={devices}
           activeDevice={activeDevice}
-          setActiveDevice={this.setActiveDevice}
+          onDeviceChanged={this.handleRoomChange}
         />
         <br />
         <br />
@@ -107,7 +108,6 @@ class App extends Component<{}, IAppState> {
     return (
       <div className={Styles.App}>
         <ElectronDragBar />
-        <br />
         {isLoading && this.renderLoadingState()}
         {!isLoading && devices.length === 0 && this.renderEmptyState()}
         {devices.length > 0 && this.renderReadyState()}

@@ -22,9 +22,19 @@ export default class SonosPlayer {
       pause: this.pause,
       previous: this.previous,
       next: this.next,
+      getPosition: this.getPosition,
     };
     commandMap[command]();
   };
+
+  // Todo: improve this
+  async getPosition(): Promise<number> {
+    if (this.activeDevice) {
+      const track = await this.activeDevice.avTransportService().CurrentTrack();
+      return track.position;
+    }
+    return null;
+  }
 
   private play = async () => {
     try {

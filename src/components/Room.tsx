@@ -1,19 +1,21 @@
 import React, { Component } from 'react';
-import { SonosDevice, SonosTrack, IPCMainEvent } from '../../common/types';
+import { IPCMainEvent, SonosDevice, SonosTrack, SonosPlayState } from '../../common/types';
 import { sendMainMessage } from '../helpers';
 import { IpcMessageEvent } from 'electron';
-import Player from './Player/Player';
 import Styles from './Room.module.css';
+import Player from './Player/Player';
+import Track from './Track';
 
 const { ipcRenderer } = window.require('electron');
 
 interface IRoomProps {
-  device: SonosDevice;
   key: string;
+  device: SonosDevice;
 }
 
 interface IRoomState {
   track: SonosTrack | null;
+  playState: SonosPlayState | null;
 }
 
 class Room extends Component<IRoomProps, IRoomState> {
@@ -22,6 +24,7 @@ class Room extends Component<IRoomProps, IRoomState> {
 
     this.state = {
       track: null,
+      playState: null,
     };
   }
 
@@ -41,13 +44,30 @@ class Room extends Component<IRoomProps, IRoomState> {
   }
 
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {
-    console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
     switch (data.type) {
       case 'SonosNetwork:currentTrack':
-        const {
-          payload: { track },
-        } = data;
-        this.setState({ track });
+        console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
+        this.setState({ track: data.payload.track });
+        break;
+      case 'SonosNetwork:currentPartialTrack':
+        console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
+        this.setState(state => {
+          if (state.track && data.payload.track.position) {
+            return {
+              ...this.state,
+              track: {
+                ...state.track,
+                position: data.payload.track.position,
+              },
+            };
+          } else {
+            return this.state;
+          }
+        });
+        break;
+      case 'SonosNetwork:playState':
+        console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
+        this.setState({ playState: data.payload.playState });
         break;
       default:
         break;
@@ -98,18 +118,21 @@ class Room extends Component<IRoomProps, IRoomState> {
     });
   };
 
-  renderPlayer = () => {
-    const playerProps = {
-      onPlay: this.handlePlayerOnPlay,
-      onPause: this.handlePlayerOnPause,
-      onPrevious: this.handlePlayerOnPrevious,
-      onNext: this.handlePlayerOnNext,
-    };
-    return <Player {...playerProps} />;
+  handlePlayerGetPosition = () => {
+    const { device } = this.props;
+    sendMainMessage({
+      type: 'Player:getPosition',
+      payload: {
+        deviceId: device.id,
+      },
+    });
   };
+
+  renderPlayer = () => {};
 
   renderTrack() {
     const { track } = this.state;
+
     if (!track) {
       return (
         <div>
@@ -121,24 +144,26 @@ class Room extends Component<IRoomProps, IRoomState> {
 
     return (
       <div className={Styles.Room}>
-        {this.renderPlayer()}
-        <div>{track.title}</div>
-        <div>
-          {track.position}|{track.duration}
-        </div>
-        <div>
-          {track.artist} - {track.album}
-        </div>
+        <Player
+          onPlay={this.handlePlayerOnPlay}
+          onPause={this.handlePlayerOnPause}
+          onPrevious={this.handlePlayerOnPrevious}
+          onNext={this.handlePlayerOnNext}
+          onGetPosition={this.handlePlayerGetPosition}
+        />
+        <Track track={track} />
       </div>
     );
   }
 
   render() {
     const { device } = this.props;
+    const { playState } = this.state;
     return (
       <>
         <div>{`Now Playing - ${device.name}`}</div>
         <div>{device.displayName}</div>
+        <div>PlayState: {playState}</div>
         <div>{this.renderTrack()}</div>
       </>
     );
