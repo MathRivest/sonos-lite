@@ -7,8 +7,12 @@
 - [x] Current track info
 - [x] Play/pause/next/previous
 - [x] Setup localstorage
-- [ ] Current track live update
+- [x] Current track live update
+- [ ] Basic design
+- [ ] Use zones instead of devices
+- [ ] Volume
 - [ ] Queue
+- [ ] Good design
 - [ ] Key bindings
 
 ## Todo offline work

@@ -3,8 +3,10 @@ import { IPCMainEvent, SonosDevice, SonosTrack, SonosPlayState } from '../../com
 import { sendMainMessage } from '../helpers';
 import { IpcMessageEvent } from 'electron';
 import Styles from './Room.module.css';
-import Player from './Player/Player';
-import Track from './Track';
+import Controls from './Track/Controls';
+import TrackInfos from './Track/TrackInfos';
+import AlbumArt from './Track/AlbumArt';
+import Position from './Track/Position';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -52,12 +54,12 @@ class Room extends Component<IRoomProps, IRoomState> {
       case 'SonosNetwork:currentPartialTrack':
         console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
         this.setState(state => {
-          if (state.track && data.payload.track.position) {
+          if (state.track) {
             return {
               ...this.state,
               track: {
                 ...state.track,
-                position: data.payload.track.position,
+                ...data.payload.track,
               },
             };
           } else {
@@ -130,10 +132,12 @@ class Room extends Component<IRoomProps, IRoomState> {
 
   renderPlayer = () => {};
 
-  renderTrack() {
-    const { track } = this.state;
+  renderTrack() {}
 
-    if (!track) {
+  render() {
+    const { track, playState } = this.state;
+
+    if (!track || !playState) {
       return (
         <div>
           <br />
@@ -144,28 +148,21 @@ class Room extends Component<IRoomProps, IRoomState> {
 
     return (
       <div className={Styles.Room}>
-        <Player
+        <Position position={track.position} duration={track.duration} />
+        <TrackInfos track={track} />
+        <Controls
+          playState={playState}
           onPlay={this.handlePlayerOnPlay}
           onPause={this.handlePlayerOnPause}
           onPrevious={this.handlePlayerOnPrevious}
           onNext={this.handlePlayerOnNext}
           onGetPosition={this.handlePlayerGetPosition}
         />
-        <Track track={track} />
+        <AlbumArt
+          URI={track.albumArtURL ? track.albumArtURL : track.albumArtURI}
+          name={track.album}
+        />
       </div>
-    );
-  }
-
-  render() {
-    const { device } = this.props;
-    const { playState } = this.state;
-    return (
-      <>
-        <div>{`Now Playing - ${device.name}`}</div>
-        <div>{device.displayName}</div>
-        <div>PlayState: {playState}</div>
-        <div>{this.renderTrack()}</div>
-      </>
     );
   }
 }
