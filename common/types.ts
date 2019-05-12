@@ -6,6 +6,7 @@ type Sonos = {
   currentTrack: () => Promise<SonosTrack>;
   deviceDescription: () => any;
   getCurrentState: () => Promise<SonosPlayState>;
+  getAllGroups: () => Promise<any[]>;
   next: () => Promise<void>;
   on: (eventName: string, handler: (arg: any) => void) => void;
   play: () => Promise<void>;
@@ -18,6 +19,13 @@ export type SonosDevice = Sonos & {
   id: string;
   displayName: string;
   name: string;
+};
+
+export type SonosZoneGroup = {
+  id: string;
+  coordinator: SonosDevice;
+  name: string;
+  memberIds: string[];
 };
 
 export type SonosTrack = {
@@ -43,6 +51,7 @@ export type IPCEventPayloadSonosReady = {
   type: 'SonosNetwork:ready';
   payload: {
     devices: SonosDevice[];
+    zoneGroups: SonosZoneGroup[];
   };
 };
 

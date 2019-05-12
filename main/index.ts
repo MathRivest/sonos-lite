@@ -40,12 +40,15 @@ async function init() {
   sonosNetwork = new SonosNetwork();
   sonosPlayer = new SonosPlayer(sonosNetwork);
 
-  const devices = await sonosNetwork.init();
+  await sonosNetwork.init();
+  const devices = await sonosNetwork.getDevices();
+  const zoneGroups = await sonosNetwork.getZoneGroups();
 
   sendRendererMessage(mainWindow, {
     type: 'SonosNetwork:ready',
     payload: {
       devices,
+      zoneGroups,
     },
   });
 }
@@ -94,11 +97,13 @@ async function ipcMainListener(_event: IpcMessageEvent, data: IPCRendererEvent):
 async function handleAppLoaded(): Promise<void> {
   if (sonosNetwork && sonosNetwork.isReady) {
     const devices = await sonosNetwork.getDevices();
+    const zoneGroups = await sonosNetwork.getZoneGroups();
     unsubscribeFromDevices();
     sendRendererMessage(mainWindow, {
       type: 'SonosNetwork:ready',
       payload: {
         devices,
+        zoneGroups,
       },
     });
   }
@@ -155,9 +160,10 @@ async function handlePlayerCommand(data: IPCEventPayloadPlayerCommand): Promise<
 }
 
 function startGetPositionTimer(): void {
-  positionTimer = setInterval(() => {
-    handlePlayerGetPosition();
-  }, 1000);
+  if (positionTimer) {
+    clearGetPositionTimer();
+  }
+  positionTimer = setInterval(() => handlePlayerGetPosition(), 1000);
 }
 
 function clearGetPositionTimer(): void {
@@ -179,7 +185,6 @@ async function handlePlayerGetPosition(): Promise<void> {
 }
 
 function unsubscribeFromDevices(): void {
-  clearGetPositionTimer();
   // Unsubscribe to all events when changing rooms
   const devices = sonosNetwork.getDevices();
   devices.forEach(device => {

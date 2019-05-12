@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import Styles from './App.module.css';
 import ElectronDragBar from './components/ElectronDragBar';
-import { SonosDevice, IPCMainEvent, IPCEventPayloadSonosReady } from '../common/types';
+import {
+  SonosDevice,
+  IPCMainEvent,
+  IPCEventPayloadSonosReady,
+  SonosZoneGroup,
+} from '../common/types';
 import { sendMainMessage, setLocalStorage, getLocalStorage } from './helpers';
 import { IpcMessageEvent } from 'electron';
 import Rooms from './components/Rooms';
@@ -11,6 +16,7 @@ const { ipcRenderer } = window.require('electron');
 
 interface IAppState {
   devices: SonosDevice[];
+  zoneGroups: SonosZoneGroup[];
   activeDevice: SonosDevice | undefined;
   isLoading: boolean;
 }
@@ -21,6 +27,7 @@ class App extends Component<{}, IAppState> {
 
     this.state = {
       devices: [],
+      zoneGroups: [],
       activeDevice: undefined,
       isLoading: true,
     };
@@ -56,6 +63,7 @@ class App extends Component<{}, IAppState> {
 
     this.setState({
       devices: data.payload.devices,
+      zoneGroups: data.payload.zoneGroups,
       activeDevice,
       isLoading: false,
     });
@@ -87,11 +95,11 @@ class App extends Component<{}, IAppState> {
   }
 
   renderReadyState() {
-    const { devices, activeDevice } = this.state;
+    const { zoneGroups, activeDevice } = this.state;
     return (
       <div>
         <Rooms
-          devices={devices}
+          zoneGroups={zoneGroups}
           activeDevice={activeDevice}
           onDeviceChanged={this.handleRoomChange}
         />

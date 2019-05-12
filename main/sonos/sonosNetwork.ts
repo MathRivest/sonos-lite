@@ -1,4 +1,4 @@
-import { SonosDevice, SonosTrack } from '../../common/types';
+import { SonosDevice, SonosTrack, SonosZoneGroup } from '../../common/types';
 
 const { DeviceDiscovery, Listener } = require('sonos');
 
@@ -52,14 +52,15 @@ const IS_MOCK_MODE: boolean = false;
 
 export default class SonosNetwork {
   devices: SonosDevice[] = [];
+  zoneGroups: SonosZoneGroup[] = [];
   listener = Listener;
   isReady = false;
 
   constructor() {}
 
   public async init() {
-    this.devices = [];
-    await this.discover();
+    this.devices = await this.discover();
+    this.zoneGroups = await this.getAllZoneGroups();
     this.isReady = true;
     console.log(`SonosNetwork::Discovered ${this.devices.length} devices`);
     return this.getDevices();
@@ -70,6 +71,10 @@ export default class SonosNetwork {
     //   return MOCK_DEVICES;
     // }
     return this.devices;
+  }
+
+  public getZoneGroups(): SonosZoneGroup[] {
+    return this.zoneGroups;
   }
 
   public async getDevice(deviceId: string): Promise<SonosDevice> {
@@ -120,5 +125,40 @@ export default class SonosNetwork {
       console.log(`Could not subscribe to ${device.name} - ${device.displayName}`);
       return null;
     }
+  }
+
+  private async getAllZoneGroups(): Promise<any> {
+    const groups: SonosZoneGroup[] = [];
+
+    return new Promise(async (resolve, reject) => {
+      const devices = this.getDevices();
+      if (devices.length === 0) {
+        reject(new Error(`Error:: No ZoneGroups`));
+      }
+
+      const rawZoneGroups = await devices[0].getAllGroups();
+      rawZoneGroups.forEach((rawZoneGroup: any) => {
+        if (!Array.isArray(rawZoneGroup.ZoneGroupMember)) {
+          rawZoneGroup.ZoneGroupMember = [rawZoneGroup.ZoneGroupMember];
+        }
+        const groupCoordinator = rawZoneGroup.ZoneGroupMember.find(
+          (member: any) => member.UUID === rawZoneGroup.Coordinator,
+        );
+
+        if (!groupCoordinator || groupCoordinator.Invisible) {
+          return;
+        }
+
+        const coordinator = this.devices.find(device => device.id === rawZoneGroup.Coordinator);
+        groups.push({
+          id: rawZoneGroup.ID,
+          coordinator,
+          name: coordinator.name,
+          memberIds: rawZoneGroup.ZoneGroupMember.map((member: any) => member.UUID),
+        });
+      });
+
+      resolve(groups);
+    });
   }
 }

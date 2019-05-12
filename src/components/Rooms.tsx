@@ -1,21 +1,21 @@
 import React, { FC } from 'react';
-import { SonosDevice } from '../../common/types';
+import { SonosDevice, SonosZoneGroup } from '../../common/types';
 
 interface IRoomsProps {
-  devices: SonosDevice[];
+  zoneGroups: SonosZoneGroup[];
   activeDevice: SonosDevice | undefined;
   onDeviceChanged: (deviceId: string) => void;
 }
-const Rooms: FC<IRoomsProps> = ({ devices, activeDevice, onDeviceChanged }) => {
+const Rooms: FC<IRoomsProps> = ({ zoneGroups, activeDevice, onDeviceChanged }) => {
   return (
     <select
       onChange={event => onDeviceChanged(event.target.value)}
-      defaultValue={activeDevice ? activeDevice.id : devices[0].id}
+      defaultValue={activeDevice ? activeDevice.id : zoneGroups[0].coordinator.id}
     >
-      {devices.map(({ displayName, name, id }) => {
+      {zoneGroups.map(({ name, coordinator }) => {
         return (
-          <option key={id} value={id}>
-            {name} - {displayName}
+          <option key={coordinator.id} value={coordinator.id}>
+            {name}
           </option>
         );
       })}

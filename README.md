@@ -8,8 +8,8 @@
 - [x] Play/pause/next/previous
 - [x] Setup localstorage
 - [x] Current track live update
+- [x] Use zones instead of devices
 - [ ] Basic design
-- [ ] Use zones instead of devices
 - [ ] Volume
 - [ ] Queue
 - [ ] Good design
