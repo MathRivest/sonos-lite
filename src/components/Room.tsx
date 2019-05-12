@@ -120,16 +120,6 @@ class Room extends Component<IRoomProps, IRoomState> {
     });
   };
 
-  handlePlayerGetPosition = () => {
-    const { device } = this.props;
-    sendMainMessage({
-      type: 'Player:getPosition',
-      payload: {
-        deviceId: device.id,
-      },
-    });
-  };
-
   renderPlayer = () => {};
 
   renderTrack() {}
@@ -156,7 +146,6 @@ class Room extends Component<IRoomProps, IRoomState> {
           onPause={this.handlePlayerOnPause}
           onPrevious={this.handlePlayerOnPrevious}
           onNext={this.handlePlayerOnNext}
-          onGetPosition={this.handlePlayerGetPosition}
         />
         <AlbumArt
           URI={track.albumArtURL ? track.albumArtURL : track.albumArtURI}

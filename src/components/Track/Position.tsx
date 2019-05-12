@@ -12,6 +12,7 @@ const Position: React.FC<{
         <div className={Styles.progress} style={{ width: progress + '%' }} />
         <div className={Styles.cursor} style={{ left: progress + '%' }} />
       </div>
+      {`${position} / ${duration}`}
     </div>
   );
 };

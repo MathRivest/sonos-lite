@@ -70,8 +70,7 @@ export type IPCRendererEvent =
   | IPCEventPayloadAppLoaded
   | IPCEventPayloadRoomLoaded
   | IPCEventPayloadRoomChanged
-  | IPCEventPayloadPlayerCommand
-  | IPCEventPayloadPlayerGetPosition;
+  | IPCEventPayloadPlayerCommand;
 
 export type IPCEventPayloadAppLoaded = {
   type: 'App:loaded';
@@ -95,12 +94,5 @@ export type IPCEventPayloadPlayerCommand = {
   payload: {
     deviceId: string;
     command: 'play' | 'pause' | 'previous' | 'next';
-  };
-};
-
-export type IPCEventPayloadPlayerGetPosition = {
-  type: 'Player:getPosition';
-  payload: {
-    deviceId: string;
   };
 };

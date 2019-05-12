@@ -7,7 +7,6 @@ import {
   IPCRendererEvent,
   IPCEventPayloadRoomLoaded,
   IPCEventPayloadPlayerCommand,
-  IPCEventPayloadPlayerGetPosition,
   SonosTrack,
   SonosDevice,
   SonosPlayState,
@@ -20,6 +19,7 @@ let mainWindow: BrowserWindow;
 let tray: Tray;
 let sonosNetwork: SonosNetwork;
 let sonosPlayer: SonosPlayer;
+let positionTimer: NodeJS.Timeout | null = null;
 
 async function init() {
   mainWindow = initMainWindow();
@@ -88,9 +88,6 @@ async function ipcMainListener(_event: IpcMessageEvent, data: IPCRendererEvent):
     case 'Player:command':
       handlePlayerCommand(data);
       break;
-    case 'Player:getPosition':
-      handlePlayerGetPosition(data);
-      break;
   }
 }
 
@@ -117,10 +114,13 @@ async function handleRoomLoaded(data: IPCEventPayloadRoomLoaded): Promise<void> 
     track = await device.currentTrack();
     track = track.duration === 0 ? null : track;
     playState = await device.getCurrentState();
-  } catch (error) {}
+  } catch (error) {
+    console.log('Error::Could not get track or playstate');
+  }
 
   handleCurrentTrackEvent(track);
   handlePlayStateEvent(playState);
+  startGetPositionTimer();
 
   device.on('CurrentTrack', handleCurrentTrackEvent);
   device.on('PlayState', handlePlayStateEvent);
@@ -154,7 +154,17 @@ async function handlePlayerCommand(data: IPCEventPayloadPlayerCommand): Promise<
   await sonosPlayer.sendCommand(data.payload.command);
 }
 
-async function handlePlayerGetPosition(_data: IPCEventPayloadPlayerGetPosition): Promise<void> {
+function startGetPositionTimer(): void {
+  positionTimer = setInterval(() => {
+    handlePlayerGetPosition();
+  }, 1000);
+}
+
+function clearGetPositionTimer(): void {
+  clearInterval(positionTimer);
+}
+
+async function handlePlayerGetPosition(): Promise<void> {
   const position = await sonosPlayer.getPosition();
   if (position) {
     sendRendererMessage(mainWindow, {
@@ -169,6 +179,7 @@ async function handlePlayerGetPosition(_data: IPCEventPayloadPlayerGetPosition):
 }
 
 function unsubscribeFromDevices(): void {
+  clearGetPositionTimer();
   // Unsubscribe to all events when changing rooms
   const devices = sonosNetwork.getDevices();
   devices.forEach(device => {

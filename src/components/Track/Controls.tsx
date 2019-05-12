@@ -8,20 +8,9 @@ interface IControlsProps {
   onPause: () => void;
   onPrevious: () => void;
   onNext: () => void;
-  onGetPosition: () => void;
 }
 
 export class Controls extends PureComponent<IControlsProps> {
-  positionTimer: NodeJS.Timeout | null = null;
-
-  componentDidMount() {
-    this.positionTimer = setInterval(() => this.props.onGetPosition(), 1000);
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.positionTimer!);
-  }
-
   render() {
     const { playState, onPlay, onPause, onPrevious, onNext } = this.props;
     const isPlaying = playState === 'playing';
