@@ -45,11 +45,15 @@ class Room extends Component<IRoomProps, IRoomState> {
     ipcRenderer.removeListener('Main:message', this.ipcRendererListener);
   }
 
+  getIsTransitionning = (): boolean => this.state.playState === 'transitionning';
+
   ipcRendererListener = (_event: IpcMessageEvent, data: IPCMainEvent) => {
     switch (data.type) {
       case 'SonosNetwork:currentTrack':
         console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
-        this.setState({ track: data.payload.track });
+        this.setState({
+          track: data.payload.track,
+        });
         break;
       case 'SonosNetwork:currentPartialTrack':
         console.log(`%c Received ${data.type}`, 'background: #333; color: #fff', data.payload);
@@ -75,6 +79,21 @@ class Room extends Component<IRoomProps, IRoomState> {
         break;
     }
   };
+
+  mutateTrack(trackChanges: Partial<SonosTrack>, callback: () => void): void {
+    const { track } = this.state;
+    if (!track) return;
+
+    this.setState(
+      {
+        track: {
+          ...track,
+          ...trackChanges,
+        },
+      },
+      () => callback(),
+    );
+  }
 
   handlePlayerOnPlay = () => {
     const { device } = this.props;
@@ -120,9 +139,23 @@ class Room extends Component<IRoomProps, IRoomState> {
     });
   };
 
-  renderPlayer = () => {};
+  handlePlayerOnSeek = (newPositionPercent: number) => {
+    const { track } = this.state;
+    const { device } = this.props;
+    if (!track || !track.duration) return;
 
-  renderTrack() {}
+    const newPosition = Math.round((newPositionPercent * track.duration) / 100);
+    this.mutateTrack({ position: newPosition }, () => {
+      sendMainMessage({
+        type: 'Player:command',
+        payload: {
+          command: 'seek',
+          deviceId: device.id,
+          position: newPosition,
+        },
+      });
+    });
+  };
 
   render() {
     const { track, playState } = this.state;
@@ -138,7 +171,12 @@ class Room extends Component<IRoomProps, IRoomState> {
 
     return (
       <div className={Styles.Room}>
-        <Position position={track.position} duration={track.duration} />
+        <Position
+          position={track.position}
+          duration={track.duration}
+          onSeek={this.handlePlayerOnSeek}
+          isUpdating={this.getIsTransitionning()}
+        />
         <TrackInfos track={track} />
         <Controls
           playState={playState}

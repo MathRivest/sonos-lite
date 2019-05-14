@@ -133,13 +133,14 @@ async function handleRoomLoaded(data: IPCEventPayloadRoomLoaded): Promise<void> 
 
 async function handleCurrentTrackEvent(track: SonosTrack) {
   const position = await sonosPlayer.getPosition();
-  const payload = position
-    ? {
-        track: { ...track, position },
-      }
-    : {
-        track,
-      };
+  const payload =
+    position || position === 0
+      ? {
+          track: { ...track, position },
+        }
+      : {
+          track,
+        };
   sendRendererMessage(mainWindow, {
     type: 'SonosNetwork:currentTrack',
     payload,
@@ -156,7 +157,7 @@ async function handlePlayStateEvent(playState: SonosPlayState) {
 }
 
 async function handlePlayerCommand(data: IPCEventPayloadPlayerCommand): Promise<void> {
-  await sonosPlayer.sendCommand(data.payload.command);
+  await sonosPlayer.sendCommand(data.payload.command, data);
 }
 
 function startGetPositionTimer(): void {

@@ -13,6 +13,7 @@ type Sonos = {
   pause: () => Promise<void>;
   previous: () => Promise<void>;
   removeListener: (eventName: string, handler: (arg: any) => void) => void;
+  seek: (seconds: number) => Promise<void>;
 };
 
 export type SonosDevice = Sonos & {
@@ -102,6 +103,7 @@ export type IPCEventPayloadPlayerCommand = {
   type: 'Player:command';
   payload: {
     deviceId: string;
-    command: 'play' | 'pause' | 'previous' | 'next';
+    command: 'play' | 'pause' | 'previous' | 'next' | 'seek';
+    position?: number;
   };
 };

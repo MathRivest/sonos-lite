@@ -1,5 +1,5 @@
 import SonosNetwork from './sonosNetwork';
-import { SonosDevice } from '../../common/types';
+import { SonosDevice, IPCEventPayloadPlayerCommand } from '../../common/types';
 
 export default class SonosPlayer {
   sonosNetwork: SonosNetwork;
@@ -16,15 +16,19 @@ export default class SonosPlayer {
     }
   };
 
-  public sendCommand = (command: string) => {
-    const commandMap: { [command: string]: () => void } = {
+  public sendCommand = (command: string, data: IPCEventPayloadPlayerCommand) => {
+    const commandMap: { [command: string]: (data?: IPCEventPayloadPlayerCommand) => void } = {
       play: this.play,
       pause: this.pause,
       previous: this.previous,
       next: this.next,
+      seek: this.seek,
       getPosition: this.getPosition,
     };
-    commandMap[command]();
+    const controlHandler = commandMap[command];
+    if (controlHandler) {
+      controlHandler(data);
+    }
   };
 
   async getPosition(): Promise<number> {
@@ -32,7 +36,7 @@ export default class SonosPlayer {
       const track = await this.activeDevice.avTransportService().CurrentTrack();
       return track.position;
     }
-    return null;
+    return 0;
   }
 
   private play = async () => {
@@ -64,6 +68,16 @@ export default class SonosPlayer {
       await this.activeDevice.next();
     } catch (error) {
       console.log('An error occured trying to next');
+    }
+  };
+
+  private seek = async (data: IPCEventPayloadPlayerCommand) => {
+    const newPosition = data.payload.position;
+    console.log('going to try to set newPosition', newPosition);
+    try {
+      await this.activeDevice.seek(newPosition);
+    } catch (error) {
+      console.log('An error occured trying to seek');
     }
   };
 }

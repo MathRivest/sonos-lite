@@ -103,8 +103,6 @@ class App extends Component<{}, IAppState> {
           activeDevice={activeDevice}
           onDeviceChanged={this.handleRoomChange}
         />
-        <br />
-        <br />
         {activeDevice && <Room device={activeDevice} key={activeDevice.id} />}
       </div>
     );
